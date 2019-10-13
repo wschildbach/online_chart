@@ -29,6 +29,7 @@
         <script type="text/javascript" src="./javascript/harbours.js"></script>
         <script type="text/javascript" src="./javascript/nominatim.js"></script>
         <script type="text/javascript" src="./javascript/tidal_scale.js"></script>
+        <script type="text/javascript" src="./javascript/ortholoxo.js"></script>
         <script type="text/javascript" src="./javascript/route/NauticalRoute.js"></script>
         <script type="text/javascript" src="./javascript/mouseposition_dm.js"></script>
         <script type="text/javascript" src="./javascript/grid_wgs.js"></script>
