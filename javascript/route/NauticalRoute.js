@@ -223,42 +223,66 @@ function NauticalRoute_getPoints() {
 
     const distFactors = {km: 1/ 0.540, m : 1000 / 0.540, nm : 1, ft : 1000 / (0.540*0.3048)};
     let distFactor = distFactors[$('#distUnits').val()];
+function NauticalRoute_zoomTo(evt) {
+    /* this/context is tr, target is td */
+    let tg = evt.target;
 
-    var htmlText;
-    var latA, latB, lonA, lonB, distance, bearing;
-    let totalDistance = 0;
+    // drill down from tr into points array
+    let idx = $(this).attr('id')
 
-    let latFormat = $('#coordFormat').val();
-    let lonFormat = $('#coordFormat').val().replace(/[NS]/,'W');
-    let coordFormat = function(lat,lon) {return formatCoords(lat, latFormat) + " - " + formatCoords(lon, lonFormat);}
+    let points = routeObject.geometry.getVertices();
+    let pt = points[idx];
 
-    document.getElementById("routeStart").innerHTML = '--';
-    document.getElementById("routeEnd").innerHTML   = '--';
-    document.getElementById("routeDistance").innerHTML = '--';
-    document.getElementById("routePoints").innerHTML = '';
+    /* could now also determine zoom by building the difference between points, then using
+       http://dev.openlayers.org/apidocs/files/OpenLayers/Layer-js.html#OpenLayers.Layer.getZoomForExtent
+     */
 
-    htmlText = '';
+    jumpTo(x2lon(pt.x), y2lat(pt.y), zoom);
+}
+
+let routeChanged = false;
+
+function NauticalRoute_getPoints() {
+    let points = routeObject.geometry.getVertices();
+
+    $('#routeStart').html('--');
+    $('#routeEnd').html('--');
+    $('#routeDistance').html('--');
+
+    let rp = $('#routePoints');
+    rp.html();
+
     if (points != undefined) {
-        for(i = 0; i < points.length - 1; i++) {
-            latA = y2lat(points[i].y);
-            lonA = x2lon(points[i].x);
-            latB = y2lat(points[i + 1].y);
-            lonB = x2lon(points[i + 1].x);
-            bearing = getBearing(latA, latB, lonA, lonB);
-            distance = getDistance(latA, latB, lonA, lonB) * distFactor;
+        const distFactors = {km: 1/ 0.540, m : 1000 / 0.540, nm : 1, ft : 1000 / (0.540*0.3048)};
+        let distFactor = distFactors[$('#distUnits').val()];
+
+        let latFormat = $('#coordFormat').val();
+        let lonFormat = $('#coordFormat').val().replace(/[NS]/,'W');
+        let coordFormat = function(lat,lon) {return formatCoords(lat, latFormat) + " - " + formatCoords(lon, lonFormat);}
+
+        let totalDistance = 0;
+        for(let i = 0; i < points.length - 1; i++) {
+            let latA = y2lat(points[i].y);
+            let lonA = x2lon(points[i].x);
+            let latB = y2lat(points[i + 1].y);
+            let lonB = x2lon(points[i + 1].x);
+            let bearing = getBearing(latA, latB, lonA, lonB);
+            let distance = getDistance(latA, latB, lonA, lonB) * distFactor;
             totalDistance += distance;
-            htmlText +=
-                '<tr>' +
-                '<td>' + parseInt(i+1) + '.</td>' +
-                '<td>' + bearing.toFixed(1) + '°</td>' +
-                '<td>' + distance.toFixed(1) + ' ' + $('#distUnits').val() + '</td>' +
-                '<td>' + coordFormat(latB,lonB) + '</td>' +
-                '<td>' + 'O' + '</td></tr>'
+            rp.append('<tr id="' + parseInt(i) + '"></tr>');
+            let tr = $('tr:last', rp);
+            tr.append(
+                '<td>' + parseInt(i+1) + '.</td>',
+                '<td>' + bearing.toFixed(1) + '°</td>',
+                '<td>' + distance.toFixed(1) + ' ' + $('#distUnits').val() + '</td>',
+                '<td>' + coordFormat(latB,lonB) + '</td>',
+                '<td>' + 'O' + '</td>'
+            );
+            tr.click(NauticalRoute_zoomTo);
         }
-        document.getElementById("routeStart").innerHTML = coordFormat(y2lat(points[0].y),x2lon(points[0].x));
-        document.getElementById("routeEnd").innerHTML   = coordFormat(y2lat(points[points.length-1].y),x2lon(points[points.length-1].x));
-        document.getElementById("routeDistance").innerHTML = totalDistance.toFixed(2) + ' ' + $('#distUnits').val();
-        document.getElementById("routePoints").innerHTML = htmlText;
+        $('#routeStart').html(coordFormat(y2lat(points[0].y),x2lon(points[0].x)));
+        $('#routeEnd').html(coordFormat(y2lat(points[points.length-1].y),x2lon(points[points.length-1].x)));
+        $('#routeDistance').html(totalDistance.toFixed(2) + ' ' + $('#distUnits').val());
     }
 }
 
