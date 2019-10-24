@@ -3,10 +3,10 @@
     <ul>
         <li><span><?=$t->tr("file")?></span>
             <ul>
-                <li><a onclick="toggleOpenFileDialog();"><?php $t->tr("open")?>...</a></li>
-                <li><a onclick="toggleSaveFileDialog();"><?php $t->tr("savefiledialog")?>...</a></li>
+                <li><a onclick="toggleOpenFileDialog();"><?= $t->tr("open")?>...</a></li>
+                <li><a onclick="toggleSaveFileDialog();"><?= $t->tr("save")?>...</a></li>
                 <li class="separator"></li>
-                <li onclick="togglePrefDialog();"><?php $t->tr("preferences")?>...</li>
+                <li onclick="togglePrefDialog();"><?= $t->tr("preferences")?>...</li>
                 <li class="separator"></li>
                 <li><a onClick="if (!routeChanged || confirm('<?=$t->tr("confirmCloseRoute")?>')) {closeNauticalRoute();}">Close</a></li>
             </ul>
