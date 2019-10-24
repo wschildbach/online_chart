@@ -218,17 +218,10 @@ function NauticalRoute_routeModified(event) {
 
 let routeChanged = false;
 
-function NauticalRoute_getPoints() {
-    let points = routeObject.geometry.getVertices();
-
-    const distFactors = {km: 1/ 0.540, m : 1000 / 0.540, nm : 1, ft : 1000 / (0.540*0.3048)};
-    let distFactor = distFactors[$('#distUnits').val()];
 function NauticalRoute_zoomTo(evt) {
     /* this/context is tr, target is td */
     let tg = evt.target;
-
-    // drill down from tr into points array
-    let idx = $(this).attr('id')
+    let idx = $(tg).attr('data-idx');
 
     let points = routeObject.geometry.getVertices();
     let pt = points[idx];
@@ -240,7 +233,20 @@ function NauticalRoute_zoomTo(evt) {
     jumpTo(x2lon(pt.x), y2lat(pt.y), zoom);
 }
 
-let routeChanged = false;
+function NauticalRoute_nameChange(evt) {
+    /* this/context is td, target is input */
+    let tg = evt.target;
+    let idx = $(this).attr('data-idx');
+
+    let points = routeObject.geometry.getVertices();
+    let pt = points[idx];
+
+    if ($(tg).val() == "") {
+        unset(pt.name);
+    } else {
+        pt.name = $(tg).val();
+    }
+}
 
 function NauticalRoute_getPoints() {
     let points = routeObject.geometry.getVertices();
@@ -250,7 +256,7 @@ function NauticalRoute_getPoints() {
     $('#routeDistance').html('--');
 
     let rp = $('#routePoints');
-    rp.html();
+    rp.html('');
 
     if (points != undefined) {
         const distFactors = {km: 1/ 0.540, m : 1000 / 0.540, nm : 1, ft : 1000 / (0.540*0.3048)};
@@ -271,13 +277,21 @@ function NauticalRoute_getPoints() {
             totalDistance += distance;
             rp.append('<tr id="' + parseInt(i) + '"></tr>');
             let tr = $('tr:last', rp);
+            let pname;
+            if (points[i].name == undefined) {
+                pname = '<td class="pname" data-idx="' + parseInt(i) + '"><input type="text" placeholder="' + coordFormat(latB,lonB) + '"></td>';
+            } else {
+                pname = '<td class="pname"><input type="text" value="' + points[i].name + '"></td>';
+            }
+
             tr.append(
                 '<td>' + parseInt(i+1) + '.</td>',
                 '<td>' + bearing.toFixed(1) + '°</td>',
                 '<td>' + distance.toFixed(1) + ' ' + $('#distUnits').val() + '</td>',
-                '<td>' + coordFormat(latB,lonB) + '</td>',
+                pname,
                 '<td>' + 'O' + '</td>'
             );
+            $('.pname', tr).change(NauticalRoute_nameChange);
             tr.click(NauticalRoute_zoomTo);
         }
         $('#routeStart').html(coordFormat(y2lat(points[0].y),x2lon(points[0].x)));
