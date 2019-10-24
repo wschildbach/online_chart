@@ -47,11 +47,13 @@ function NauticalRoute_initControls() {
     editPanel.addControls([routeDraw, routeEdit]);
     editPanel.defaultControl = routeDraw;
     map.addControl(editPanel);
+    NauticalRoute_initSegmentDisplay();
     routeEdit.standalone = true;
 }
 
 function NauticalRoute_startEditMode() {
     NauticalRoute_initControls();
+    NauticalRoute_getPoints();
     routeChanged = false;
 }
 
@@ -62,6 +64,7 @@ function NauticalRoute_stopEditMode() {
     routeDraw.deactivate();
     routeEdit.deactivate();
     layer_nautical_route.removeAllFeatures();
+    routeObject = undefined;
 }
 
 function NauticalRoute_addMode() {
@@ -73,6 +76,28 @@ function NauticalRoute_editMode() {
     routeDraw.deactivate();
     routeEdit.activate();
     //layer_nautical_route.style = style_green;
+}
+
+/*
+ * set up the default visibility of columns in the segment display table.
+ * Also dynamically generate the preferences view based on the table.
+ */
+function NauticalRoute_initSegmentDisplay() {
+    let prefMenu = $('#prefViewColumns');
+    let colHeaders = $('#segmentList th');
+    colHeaders.each(function() {
+        let id = $(this).attr('id');
+        if (id != undefined) {
+            let li = '<li><input type="checkbox" checked id="' + 'chk' + id + '" >' + $(this).text() + '</li>';
+            /* append a li with checkbox; on click, set the display property of associated columns */
+            $(li).appendTo(prefMenu).click(function (evt) {
+                let checked = $(evt.currentTarget).find('input').is(':checked');
+                /* get the id of the input element; strip off the "chk" from the id */
+                let t = '.'+$(evt.currentTarget).find('input').attr('id').substring(3);
+                $(t).css('display',checked ? 'table-cell':'none');
+            });
+        }
+    });
 }
 
 function toggleOpenFileDialog() {
@@ -218,10 +243,14 @@ function NauticalRoute_routeModified(event) {
 
 let routeChanged = false;
 
+function getIdx(e) {
+    return  $(e).attr('data-idx') ||
+            $(e).parentsUntil('#pointsRoute','[data-idx]').attr('data-idx');
+}
+
 function NauticalRoute_zoomTo(evt) {
     /* this/context is tr, target is td */
-    let tg = evt.target;
-    let idx = $(tg).attr('data-idx');
+    let idx = getIdx(evt.target);
 
     let points = routeObject.geometry.getVertices();
     let pt = points[idx];
@@ -235,22 +264,20 @@ function NauticalRoute_zoomTo(evt) {
 
 function NauticalRoute_nameChange(evt) {
     /* this/context is td, target is input */
-    let tg = evt.target;
-    let idx = $(this).attr('data-idx');
+    let name = $(evt.target).val();
+    let idx = getIdx(evt.target);
 
     let points = routeObject.geometry.getVertices();
     let pt = points[idx];
 
-    if ($(tg).val() == "") {
-        unset(pt.name);
+    if (name == "") {
+        delete pt.name;
     } else {
-        pt.name = $(tg).val();
+        pt.name = name;
     }
 }
 
 function NauticalRoute_getPoints() {
-    let points = routeObject.geometry.getVertices();
-
     $('#routeStart').html('--');
     $('#routeEnd').html('--');
     $('#routeDistance').html('--');
@@ -258,6 +285,7 @@ function NauticalRoute_getPoints() {
     let rp = $('#routePoints');
     rp.html('');
 
+    let points = routeObject && routeObject.geometry.getVertices();
     if (points != undefined) {
         const distFactors = {km: 1/ 0.540, m : 1000 / 0.540, nm : 1, ft : 1000 / (0.540*0.3048)};
         let distFactor = distFactors[$('#distUnits').val()];
@@ -275,24 +303,22 @@ function NauticalRoute_getPoints() {
             let bearing = getBearing(latA, latB, lonA, lonB);
             let distance = getDistance(latA, latB, lonA, lonB) * distFactor;
             totalDistance += distance;
-            rp.append('<tr id="' + parseInt(i) + '"></tr>');
-            let tr = $('tr:last', rp);
-            let pname;
-            if (points[i].name == undefined) {
-                pname = '<td class="pname" data-idx="' + parseInt(i) + '"><input type="text" placeholder="' + coordFormat(latB,lonB) + '"></td>';
-            } else {
-                pname = '<td class="pname"><input type="text" value="' + points[i].name + '"></td>';
-            }
+            let tr = $('<tr data-idx="' + parseInt(i) + '"></tr>').appendTo(rp).click(NauticalRoute_zoomTo);;
+
+            let tdName = $('<td class="rpName"></td>');
+            tdName.append(
+                (points[i].name == undefined) ?
+                $('<input type="text" placeholder="' + coordFormat(latB,lonB) + '">') :
+                $('<input type="text" value="' + points[i].name + '">')
+            ).change(NauticalRoute_nameChange);
 
             tr.append(
-                '<td>' + parseInt(i+1) + '.</td>',
-                '<td>' + bearing.toFixed(1) + '°</td>',
-                '<td>' + distance.toFixed(1) + ' ' + $('#distUnits').val() + '</td>',
-                pname,
+                '<td class="rpIdx">' + parseInt(i+1) + '.</td>',
+                '<td class="rpRwk">' + bearing.toFixed(1) + '°</td>',
+                '<td class="rpDist">' + distance.toFixed(1) + ' ' + $('#distUnits').val() + '</td>',
+                tdName,
                 '<td>' + 'O' + '</td>'
             );
-            $('.pname', tr).change(NauticalRoute_nameChange);
-            tr.click(NauticalRoute_zoomTo);
         }
         $('#routeStart').html(coordFormat(y2lat(points[0].y),x2lon(points[0].x)));
         $('#routeEnd').html(coordFormat(y2lat(points[points.length-1].y),x2lon(points[points.length-1].x)));

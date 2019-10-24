@@ -217,6 +217,7 @@ $german = array(
     "name"                   => "Name",
     "file"                   => "Datei",
     "deleteRoute"            => "Route löschen",
+    "segmentDisplay"         => "Segment Anzeige",
 
     // other
     "noJavascript"           => "Entweder Ihr Browser unterstützt kein JavaScript, or Sie haben es ausgeschaltet. OpenSeaMap braucht JavaScript für die Kartenanzeige.",

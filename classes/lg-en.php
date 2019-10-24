@@ -216,6 +216,7 @@ $english = array(
     "name"                   => "Name",
     "file"                   => "File",
     "deleteRoute"            => "Delete Route",
+    "segmentDisplay"         => "Segment Display",
 
     // other
     "noJavascript"           => "You are either using a browser that does not support JavaScript, or you have disabled JavaScript. OpenSeaMap uses JavaScript for its maps.",

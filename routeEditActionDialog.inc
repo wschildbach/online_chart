@@ -63,6 +63,9 @@
                 </select>
             </li>
         </ul>
+        <h2><?=$t->tr("segmentDisplay")?></h2>
+        <ul id="prefViewColumns">
+        </ul>
     </div>
 </div>
 
@@ -78,10 +81,10 @@
 <table id="segmentList">
     <thead>
         <tr>
-            <th>#</th>
-            <th><?=$t->tr("course")?></th>
-            <th><?=$t->tr("distance")?></th>
-            <th><?=$t->tr("name")?></th>
+            <th class="rpIdx">#</th>
+            <th class="rpRwk"><?=$t->tr("course")?></th>
+            <th class="rpDist"><?=$t->tr("distance")?></th>
+            <th class="rpName"><?=$t->tr("name")?></th>
             <th></th>
         </tr>
     </thead>
