@@ -82,10 +82,11 @@
     <thead>
         <tr>
             <th class="rpIdx">#</th>
-            <th class="rpRwk"><?=$t->tr("course")?></th>
-            <th class="rpDist"><?=$t->tr("distance")?></th>
+            <th class="rpRwk"><span class="tooltip"><?=$t->tr("rwK")?><span class="tooltiptext"><?=$t->tr("trueCourse")?></span></span></th>
+            <th class="rpMwk"><span class="tooltip"><?=$t->tr("mwK")?><span class="tooltiptext"><?=$t->tr("magCourse")?></span></span></th>
+            <th class="rpDist"><span class="tooltip">d<span class="tooltiptext"><?=$t->tr("distance")?></span></span></th>
             <th class="rpName"><?=$t->tr("name")?></th>
-            <th></th>
+            <th class="rpType"></th>
         </tr>
     </thead>
     <tbody id="routePoints">

@@ -217,6 +217,10 @@ $english = array(
     "file"                   => "File",
     "deleteRoute"            => "Delete Route",
     "segmentDisplay"         => "Segment Display",
+    "trueCourse"             => "True Course",
+    "magCourse"              => "Magnetic Course",
+    "rwK"                    => "tC",
+    "mwK"                    => "mC",
 
     // other
     "noJavascript"           => "You are either using a browser that does not support JavaScript, or you have disabled JavaScript. OpenSeaMap uses JavaScript for its maps.",

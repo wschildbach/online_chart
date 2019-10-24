@@ -86,7 +86,7 @@ function NauticalRoute_initSegmentDisplay() {
     let prefMenu = $('#prefViewColumns');
     let colHeaders = $('#segmentList th');
     colHeaders.each(function() {
-        let id = $(this).attr('id');
+        let id = $(this).attr('class');
         if (id != undefined) {
             let li = '<li><input type="checkbox" checked id="' + 'chk' + id + '" >' + $(this).text() + '</li>';
             /* append a li with checkbox; on click, set the display property of associated columns */
@@ -300,7 +300,7 @@ function NauticalRoute_getPoints() {
             let lonA = x2lon(points[i].x);
             let latB = y2lat(points[i + 1].y);
             let lonB = x2lon(points[i + 1].x);
-            let bearing = getBearing(latA, latB, lonA, lonB);
+            let tC = getBearing(latA, latB, lonA, lonB);
             let distance = getDistance(latA, latB, lonA, lonB) * distFactor;
             totalDistance += distance;
             let tr = $('<tr data-idx="' + parseInt(i) + '"></tr>').appendTo(rp).click(NauticalRoute_zoomTo);;
@@ -312,9 +312,17 @@ function NauticalRoute_getPoints() {
                 $('<input type="text" value="' + points[i].name + '">')
             ).change(NauticalRoute_nameChange);
 
+            let tdMwk = $('<td class="rpMwk">--</td>');
+            getDeviation(function(p) {
+                let now  = new Date();
+                let myGeoMag = geoMag(p.lat, p.lon, 0, now);
+                $(p.e).text((p.tC + myGeoMag.dec).toFixed(1)+'°');
+            },{lat:latA,lon:lonA,tC:tC,e:tdMwk}
+            );
             tr.append(
                 '<td class="rpIdx">' + parseInt(i+1) + '.</td>',
-                '<td class="rpRwk">' + bearing.toFixed(1) + '°</td>',
+                '<td class="rpRwk">' + tC.toFixed(1) + '°</td>',
+                tdMwk,
                 '<td class="rpDist">' + distance.toFixed(1) + ' ' + $('#distUnits').val() + '</td>',
                 tdName,
                 '<td>' + 'O' + '</td>'

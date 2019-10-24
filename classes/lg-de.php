@@ -218,6 +218,10 @@ $german = array(
     "file"                   => "Datei",
     "deleteRoute"            => "Route löschen",
     "segmentDisplay"         => "Segment Anzeige",
+    "trueCourse"             => "Rechtweisender Kurs",
+    "magCourse"              => "Magnetischer Kurs",
+    "rwK"                    => "rwK",
+    "mwK"                    => "mwK",
 
     // other
     "noJavascript"           => "Entweder Ihr Browser unterstützt kein JavaScript, or Sie haben es ausgeschaltet. OpenSeaMap braucht JavaScript für die Kartenanzeige.",
