@@ -53,11 +53,15 @@ function refreshMagdev() {
     let bounds = map.getExtent().toArray();
     let params = { "b": y2lat(bounds[1]), "t": y2lat(bounds[3]), "l": x2lon(bounds[0]), "r": x2lon(bounds[2])};
 
+    getDeviation(setMagdev,params);
+}
+
+function getDeviation(f,params) {
     if (geoMag == undefined) {
         function initModel(data) {
             var wmm = cof2Obj(data);
             geoMag = geoMagFactory(wmm);
-            setMagdev($(this)[0]);
+            f($(this)[0]);
         }
 
         /* if the geomagnetic model has not been loaded yet, load it and update the deviation asynchronously */
@@ -66,6 +70,6 @@ function refreshMagdev() {
             context:params}).done(initModel);
     } else {
         /* else, synchronous update */
-        setMagdev(params);
+        f(params);
     }
 }
