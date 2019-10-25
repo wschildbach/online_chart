@@ -222,6 +222,7 @@ $german = array(
     "magCourse"              => "Magnetischer Kurs",
     "rwK"                    => "rwK",
     "mwK"                    => "mwK",
+    "distanceLox"            => "Loxodrome Distanz",
 
     // other
     "noJavascript"           => "Entweder Ihr Browser unterstützt kein JavaScript, or Sie haben es ausgeschaltet. OpenSeaMap braucht JavaScript für die Kartenanzeige.",
