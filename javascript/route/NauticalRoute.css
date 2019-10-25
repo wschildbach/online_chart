@@ -62,7 +62,7 @@ div#actionDialogMenu {
     display: block;
     height:120px;
     overflow-y:auto;
-    width: 400px;
+    width: 550px;
 }
 
 #segmentList th {
@@ -74,12 +74,15 @@ div#actionDialogMenu {
     text-align: right;
 }
 
+
 #segmentList td.rpIdx,th.rpIdx { width: 1em; } /* segment # */
 #segmentList td.rpRwk,th.rpRwk { width: 3em; } /* true course */
 #segmentList td.rpMwk,th.rpMwk { width: 3em; } /* magnetic course */
 #segmentList td.rpDist,th.rpDist { width: 5em; } /* distance */
+#segmentList td.rpLoxDist,th.rpLoxDist { width: 5em; } /* loxodromic distance */
 #segmentList td.rpName,th.rpName { width: 11em; } /* coordinates */
 #segmentList td.rpType,th.rpType { width: 1em; } /* type */
+
 
 /* even/odd coloring */
 #segmentList tbody tr:nth-child(even) { background-color: #ececec; }

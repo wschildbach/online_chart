@@ -84,7 +84,8 @@
             <th class="rpIdx">#</th>
             <th class="rpRwk"><span class="tooltip"><?=$t->tr("rwK")?><span class="tooltiptext"><?=$t->tr("trueCourse")?></span></span></th>
             <th class="rpMwk"><span class="tooltip"><?=$t->tr("mwK")?><span class="tooltiptext"><?=$t->tr("magCourse")?></span></span></th>
-            <th class="rpDist"><span class="tooltip">d<span class="tooltiptext"><?=$t->tr("distance")?></span></span></th>
+            <th class="rpDist"><span class="tooltip">d<sub>orth</sub><span class="tooltiptext"><?=$t->tr("distance")?></span></span></th>
+            <th class="rpLoxDist"><span class="tooltip">d<sub>lox</sub><span class="tooltiptext"><?=$t->tr("distanceLox")?></span></span></th>
             <th class="rpName"><?=$t->tr("name")?></th>
             <th class="rpType"></th>
         </tr>
