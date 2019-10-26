@@ -33,7 +33,6 @@ var editPanel;
 var routeDraw;
 var routeEdit;
 
-var routeTrack;
 var routeObject; /* feature #0, which is the edited line */
 
 let orthoSegmentFeature;
@@ -112,9 +111,9 @@ function togglePrefDialog() {$('#preferences').toggleClass('show-modal');}
 function toggleSaveFileDialog() {$('#savefiledialog').toggleClass('show-modal');}
 
 function NauticalRoute_saveTrack() {
-    var format = document.getElementById("routeFormat").value;
-    var name   = document.getElementById("tripName").value;
-    var mimetype, filename;
+    let format = $('#routeFormat').val();
+    let name   = $('#tripName').val();
+    let mimetype, filename;
 
     if (name=="") {
         name = "route";
@@ -124,12 +123,12 @@ function NauticalRoute_saveTrack() {
         case 'CSV':
             mimetype = 'text/csv';
             filename = name+'.csv';
-            content = NauticalRoute_getRouteCsv(routeTrack);
+            content = NauticalRoute_getRouteCsv(routeObject);
             break;
         case 'KML':
             mimetype = 'application/vnd.google-earth.kml+xml';
             filename = name+'.kml';
-            content = NauticalRoute_getRouteKml(routeTrack);
+            content = NauticalRoute_getRouteKml(routeObject);
             break;
         case 'GPX':
             mimetype = 'application/gpx+xml';
@@ -357,8 +356,8 @@ function NauticalRoute_getPoints() {
             let tdName = $('<td class="rpName"></td>');
             tdName.append(
                 (points[i].name == undefined) ?
-                $('<input type="text" placeholder="' + coordFormat(latB,lonB) + '">') :
-                $('<input type="text" value="' + points[i].name + '">')
+                $('<input type="text" id="tripname" placeholder="' + coordFormat(latB,lonB) + '">') :
+                $('<input type="text" id="tripname" value="' + points[i].name + '">')
             ).change(NauticalRoute_nameChange);
 
             let v = getVariation(latA, lonA, {onLoadModel:NauticalRoute_getPoints});
