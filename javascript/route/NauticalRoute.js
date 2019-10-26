@@ -302,7 +302,6 @@ function NauticalRoute_getPoints() {
             let lonB = x2lon(points[i + 1].x);
             let tC = getBearing(latA, latB, lonA, lonB);
             let distance = getDistance(latA, latB, lonA, lonB) * distFactor;
-            let loxoDistance = loxoDistance2(latA, lonA, latB, lonB);
             totalDistance += distance;
             let tr = $('<tr data-idx="' + parseInt(i) + '"></tr>').appendTo(rp).click(NauticalRoute_zoomTo);;
 
@@ -324,8 +323,9 @@ function NauticalRoute_getPoints() {
                 '<td class="rpIdx">' + parseInt(i+1) + '.</td>',
                 '<td class="rpRwk">' + tC.toFixed(1) + '°</td>',
                 tdMwk,
+                '<td class="rpLoxRwk">' + loxoCourse(latA, lonA, latB, lonB).toFixed(1) + '°</td>',
                 '<td class="rpDist">' + distance.toFixed(1) + ' ' + $('#distUnits').val() + '</td>',
-                '<td class="rpLoxDist">' + loxoDistance.toFixed(1) + ' ' + $('#distUnits').val() + '</td>',
+                '<td class="rpLoxDist">' + loxoDistance(latA, lonA, latB, lonB).toFixed(1) + ' ' + $('#distUnits').val() + '</td>',
                 tdName,
                 '<td>' + 'O' + '</td>'
             );

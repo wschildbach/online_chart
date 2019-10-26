@@ -77,6 +77,7 @@ div#actionDialogMenu {
 
 #segmentList td.rpIdx,th.rpIdx { width: 1em; } /* segment # */
 #segmentList td.rpRwk,th.rpRwk { width: 3em; } /* true course */
+#segmentList td.rpLoxRwk,th.rpLoxRwk { width: 3em; } /* true course loxodromic */
 #segmentList td.rpMwk,th.rpMwk { width: 3em; } /* magnetic course */
 #segmentList td.rpDist,th.rpDist { width: 5em; } /* distance */
 #segmentList td.rpLoxDist,th.rpLoxDist { width: 5em; } /* loxodromic distance */
