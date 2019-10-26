@@ -21,7 +21,9 @@
  ******************************************************************************/
 
 var defaultStyle = {strokeColor: "blue", strokeOpacity: "0.8", strokeWidth: 3, fillColor: "blue", pointRadius: 3, cursor: "pointer"};
+var gcStyleOpts      = {strokeColor: "black", strokeOpacity: "0.5", strokeWidth: 1, fillColor: "blue", pointRadius: 3, cursor: "pointer", lineDash: [1,10]};
 var style = OpenLayers.Util.applyDefaults(defaultStyle, OpenLayers.Feature.Vector.style["default"]);
+var gcStyle = OpenLayers.Util.applyDefaults(gcStyleOpts, OpenLayers.Feature.Vector.style["default"]);
 var routeStyle = new OpenLayers.StyleMap({
     'default': style,
     'select': {strokeColor: "red", fillColor: "red"}
@@ -32,7 +34,9 @@ var routeDraw;
 var routeEdit;
 
 var routeTrack;
-var routeObject;
+var routeObject; /* feature #0, which is the edited line */
+
+let orthoSegmentFeature;
 
 var style_edit = {
     strokeColor: "#CD3333",
@@ -277,6 +281,51 @@ function NauticalRoute_nameChange(evt) {
     }
 }
 
+function getOrthoSegments() {
+    let mls = [];
+    let points = routeObject && routeObject.geometry.getVertices();
+    if (points) {
+        for(let i = 0; i < points.length - 1; i++) {
+            if (points[i].ortho) {
+                let latA = y2lat(points[i].y);
+                let lonA = x2lon(points[i].x);
+                let latB = y2lat(points[i + 1].y);
+                let lonB = x2lon(points[i + 1].x);
+
+                let alpha = orthoInitialCourse(latA, lonA, latB, lonB);
+                let latP = orthoPeakLatitude(latA, alpha);
+                let lonP = orthoPeakLongitude(latA, lonA, alpha);
+
+                let p=[];
+                for (j = 0; j <= 10; j++) {
+                    let t = j / 10.0;
+                    let lon = lonB*t + lonA*(1-t);
+                    let lat = orthoLat(lon,latP,lonP);
+                    p.push(new OpenLayers.Geometry.Point(lon2x(lon),lat2y(lat)));
+                }
+                let ls = new OpenLayers.Geometry.LineString(p);
+                mls.push(ls);
+            }
+        }
+    }
+    return new OpenLayers.Geometry.MultiLineString(mls);
+}
+
+function NauticalRoute_typeChange(evt) {
+    /* this/context is td, target is input */
+    let idx = getIdx(evt.target);
+
+    let points = routeObject.geometry.getVertices();
+    let pt = points[idx];
+
+    pt.ortho = $(evt.target).is(':checked');
+
+    let mls = getOrthoSegments();
+    if (orthoSegmentFeature) layer_nautical_route.removeFeatures([orthoSegmentFeature]);
+    orthoSegmentFeature = new OpenLayers.Feature.Vector(mls,{},gcStyle);
+    layer_nautical_route.addFeatures(orthoSegmentFeature, {ortho:true});
+}
+
 function NauticalRoute_getPoints() {
     $('#routeStart').html('--');
     $('#routeEnd').html('--');
@@ -312,22 +361,17 @@ function NauticalRoute_getPoints() {
                 $('<input type="text" value="' + points[i].name + '">')
             ).change(NauticalRoute_nameChange);
 
-            let tdMwk = $('<td class="rpMwk">--</td>');
-            getDeviation(function(p) {
-                let now  = new Date();
-                let myGeoMag = geoMag(p.lat, p.lon, 0, now);
-                $(p.e).text((p.tC + myGeoMag.dec).toFixed(1)+'°');
-            },{lat:latA,lon:lonA,tC:tC,e:tdMwk}
-            );
+            let v = getVariation(latA, lonA, {onLoadModel:NauticalRoute_getPoints});
+
             tr.append(
-                '<td class="rpIdx">' + parseInt(i+1) + '.</td>',
-                '<td class="rpRwk">' + tC.toFixed(1) + '°</td>',
-                tdMwk,
-                '<td class="rpLoxRwk">' + loxoCourse(latA, lonA, latB, lonB).toFixed(1) + '°</td>',
-                '<td class="rpDist">' + distance.toFixed(1) + ' ' + $('#distUnits').val() + '</td>',
-                '<td class="rpLoxDist">' + loxoDistance(latA, lonA, latB, lonB).toFixed(1) + ' ' + $('#distUnits').val() + '</td>',
+                $('<td class="rpIdx"></td>').html(parseInt(i+1)),
+                $('<td class="rpRwk"></td>').html(tC.toFixed(1) + '°'),
+                $('<td class="rpMwk"></td>').html(v ? (tC+v).toFixed(1)+'°' : '--'),
+                $('<td class="rpLoxRwk"></td>').html(loxoCourse(latA, lonA, latB, lonB).toFixed(1) + '°'),
+                $('<td class="rpDist"></td>').html(distance.toFixed(1) + ' ' + $('#distUnits').val()),
+                $('<td class="rpLoxDist"></td>').html(loxoDistance(latA, lonA, latB, lonB).toFixed(1) + ' ' + $('#distUnits').val()),
                 tdName,
-                '<td>' + 'O' + '</td>'
+                $('<input type="checkbox" '+(points[i].ortho?'checked':'')+'>').appendTo($('<td></td>')).click(NauticalRoute_typeChange)
             );
         }
         $('#routeStart').html(coordFormat(y2lat(points[0].y),x2lon(points[0].x)));
