@@ -47,6 +47,10 @@ function atan2(y,x) {
     return r2d*Math.atan2(y,x);
 }
 
+function atan(x) {
+    return r2d*Math.atan(x);
+}
+
 /*
  * Functions for great circle navigation
  */
@@ -58,7 +62,7 @@ function orthoDistance(latA, lonA, latB, lonB) {
 
 function orthoInitialCourse(latA, lonA, latB, lonB) {
     let l = lonB - lonA;
-    return n(atan2(tan(latB)*cos(latA) - sin(latA)*cos(l),sin(l)));
+    return n(atan2(sin(l), tan(latB)*cos(latA) - sin(latA)*cos(l)));
 }
 
 /* Peak latitude, Scheitelbreite */
