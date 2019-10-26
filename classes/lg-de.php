@@ -218,11 +218,14 @@ $german = array(
     "file"                   => "Datei",
     "deleteRoute"            => "Route löschen",
     "segmentDisplay"         => "Segment Anzeige",
-    "trueCourse"             => "Rechtweisender Kurs",
-    "magCourse"              => "Magnetischer Kurs",
+    "trueCourse"             => "Rechtweisender Kurs (orthodrom)",
+    "trueCourseLox"          => "Rechtweisender Kurs (loxodrom)",
+    "magCourse"              => "Magnetischer Kurs (orthodrom)",
+    "magCourseLox"           => "Magnetischer Kurs (loxodrom)",
     "rwK"                    => "rwK",
     "mwK"                    => "mwK",
-    "distanceLox"            => "Loxodrome Distanz",
+    "distanceLox"            => "Distanz (loxodrom)",
+    "distanceOrth"           => "Distanz (orthodrom)",
 
     // other
     "noJavascript"           => "Entweder Ihr Browser unterstützt kein JavaScript, or Sie haben es ausgeschaltet. OpenSeaMap braucht JavaScript für die Kartenanzeige.",

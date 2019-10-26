@@ -217,11 +217,14 @@ $english = array(
     "file"                   => "File",
     "deleteRoute"            => "Delete Route",
     "segmentDisplay"         => "Segment Display",
-    "trueCourse"             => "True Course",
-    "magCourse"              => "Magnetic Course",
+    "trueCourse"             => "True Course (orthodromic)",
+    "trueCourseLox"          => "True Course (loxodromic)",
+    "magCourse"              => "Magnetic Course (orthodromic)",
+    "magCourseLox"           => "Magnetic Course (loxodromic)",
     "rwK"                    => "TC",
     "mwK"                    => "MC",
-    "distanceLox"            => "Loxodromic Distance",
+    "distanceLox"            => "Distance (loxodromic)",
+    "distanceOrth"           => "Distance (orthodromic)",
 
     // other
     "noJavascript"           => "You are either using a browser that does not support JavaScript, or you have disabled JavaScript. OpenSeaMap uses JavaScript for its maps.",
