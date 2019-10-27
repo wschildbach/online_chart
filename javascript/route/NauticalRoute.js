@@ -353,7 +353,7 @@ function NauticalRoute_getPoints() {
             totalDistance += distance;
             let tr = $('<tr data-idx="' + parseInt(i) + '"></tr>').appendTo(rp).click(NauticalRoute_zoomTo);;
 
-            let tdName = $('<td class="rpName"></td>');
+            let tdName = $('<td class="rpName orthodromic loxodromic"></td>');
             tdName.append(
                 (points[i].name == undefined) ?
                 $('<input type="text" id="tripname" placeholder="' + coordFormat(latB,lonB) + '">') :
@@ -363,14 +363,15 @@ function NauticalRoute_getPoints() {
             let v = getVariation(latA, lonA, {onLoadModel:NauticalRoute_getPoints});
 
             tr.append(
-                $('<td class="rpIdx"></td>').html(parseInt(i+1)),
-                $('<td class="rpRwk"></td>').html(tC.toFixed(1) + '°'),
-                $('<td class="rpMwk"></td>').html(v ? (tC+v).toFixed(1)+'°' : '--'),
-                $('<td class="rpLoxRwk"></td>').html(loxoCourse(latA, lonA, latB, lonB).toFixed(1) + '°'),
-                $('<td class="rpDist"></td>').html(distance.toFixed(1) + ' ' + $('#distUnits').val()),
-                $('<td class="rpLoxDist"></td>').html(loxoDistance(latA, lonA, latB, lonB).toFixed(1) + ' ' + $('#distUnits').val()),
+                $('<td class="rpIdx orthodromic loxodromic"></td>').html(parseInt(i+1)),
+                $('<td class="rpRwk orthodromic"></td>').html(tC.toFixed(1) + '°'),
+                $('<td class="rpMwk orthodromic"></td>').html(v ? (tC+v).toFixed(1)+'°' : '--'),
+                $('<td class="rpLoxRwk loxodromic"></td>').html(loxoCourse(latA, lonA, latB, lonB).toFixed(1) + '°'),
+                $('<td class="rpLoxMwk loxodromic"></td>').html(v ? (loxoCourse(latA, lonA, latB, lonB)+v).toFixed(1)+'°' : '--'),
+                $('<td class="rpDist orthodromic"></td>').html(distance.toFixed(1) + ' ' + $('#distUnits').val()),
+                $('<td class="rpLoxDist loxodromic"></td>').html(loxoDistance(latA, lonA, latB, lonB).toFixed(1) + ' ' + $('#distUnits').val()),
                 tdName,
-                $('<input type="checkbox" '+(points[i].ortho?'checked':'')+'>').appendTo($('<td></td>')).click(NauticalRoute_typeChange)
+                $('<input type="checkbox" '+(points[i].ortho?'checked':'')+'>').appendTo($('<td class="orthodromic loxodromic"></td>')).click(NauticalRoute_typeChange)
             );
         }
         $('#routeStart').html(coordFormat(y2lat(points[0].y),x2lon(points[0].x)));
