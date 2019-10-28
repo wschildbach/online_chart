@@ -87,6 +87,7 @@ function NauticalRoute_editMode() {
  */
 function NauticalRoute_initSegmentDisplay() {
     let prefMenu = $('#prefViewColumns');
+    $(prefMenu).empty();
     let colHeaders = $('#segmentList th');
     colHeaders.each(function() {
         let id = $(this).attr('class');
