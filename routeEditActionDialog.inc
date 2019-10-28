@@ -53,7 +53,10 @@
         <span class="close-button" onclick="togglePrefDialog();">×</span>
         <h1><?=$t->tr("preferences")?></h1>
         <ul>
-            <li><?=$t->tr("coordinateFormat")?> <input type="text" size="4em" id="coordFormat" onchange="NauticalRoute_getPoints(routeTrack);" value="N __°##.#'">
+            <li><?=$t->tr("coordinateFormat")?><select id="coordFormat" onchange="NauticalRoute_getPoints(routeObject);">
+                    <option value="N __°##.#'">N 36°12.4'
+                    <option value="N __.####°">N 36.1234°
+                </select>
             </li>
             <li><?=$t->tr("units")?> <select id="distUnits" onchange="NauticalRoute_getPoints(routeTrack);">
                 <option value="nm"/>[nm]
