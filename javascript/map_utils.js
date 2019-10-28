@@ -163,7 +163,7 @@ function formatCoords(coord, format) {
             } else {
                 continue;
             }
-            while (format.charAt(i) === c) {
+            while (format.charAt(i) == '#' || format.charAt[i] == '_') {
                 df++; i++;
             }
             break;
