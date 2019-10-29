@@ -40,7 +40,7 @@ function refreshMagdev() {
         // EXAMPLE
         // VAR 3.5°5'E (2015)
         // ANNUAL DECREASE 8'
-        $('#magCompassTextTop').html("VAR "+m.variation.toFixed(1)+(m.variation>=0 ? "E":"W")+" ("+options.date.getFullYear()+")");
+        $('#magCompassTextTop').html("VAR "+m.variation.toFixed(1)+"°"+(m.variation>=0 ? "E":"W")+" ("+options.date.getFullYear()+")");
         $('#magCompassTextBottom').html("ANNUAL "+(m.change >= 0 ? "INCREASE ":"DECREASE ")+(60*m.change).toFixed(0)+"'");
     }
 }
