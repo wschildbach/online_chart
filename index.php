@@ -1187,7 +1187,10 @@
         <div class="unselectable" draggable="false" unselectable="on" id="compassRose">
             <img id="geoCompassRose" draggable="false" unselectable="on" src="./resources/map/nautical_compass_rose_geo_north.png"/>
             <img id="magCompassRose" draggable="false" unselectable="on" src="./resources/map/nautical_compass_rose_mag_north.png"/>
-            <div id="magCompassText">
+            <div id="magCompassText" class="tooltip">
+                <div class="tooltiptext">
+                    <p id="magCompassTooltip">3.5°8E</p>
+                </div>
                 <p id="magCompassTextTop">VAR 3.5°5'E (2015)</p>
                 <p id="magCompassTextBottom">ANNUAL DECREASE 8'</p>
             </div>
