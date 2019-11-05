@@ -24,6 +24,36 @@
 </div>
 
 <!--
+  - The actual content
+  -->
+<table id="tripSummary">
+    <thead>
+        <tr><th><?=$t->tr("start")?></th><th><?=$t->tr("finish")?></th><th><?=$t->tr("distance")?></th></tr>
+    </thead>
+    <tbody>
+        <tr><td id="routeStart">--</td><td id="routeEnd">--</td><td id="routeDistance">--</td></tr>
+    </tbody>
+</table>
+
+<table id="segmentList">
+    <thead>
+        <tr>
+            <th data-colname="rpIdx">#</th>
+            <th data-colname="rpRwk"><span class="tooltip"><?=$t->tr("rwK")?><span class="tooltiptext"><?=$t->tr("trueCourse")?></span></span></th>
+            <th data-colname="rpMwk"><span class="tooltip"><?=$t->tr("mwK")?><span class="tooltiptext"><?=$t->tr("magCourse")?></span></span></th>
+            <th data-colname="rpLoxRwk"><span class="tooltip"><?=$t->tr("rwK")?><span class="tooltiptext"><?=$t->tr("trueCourseLox")?></span></span></th>
+            <th data-colname="rpLoxMwk"><span class="tooltip"><?=$t->tr("mwK")?><span class="tooltiptext"><?=$t->tr("magCourseLox")?></span></span></th>
+            <th data-colname="rpDist"><span class="tooltip">d<sub>orth</sub><span class="tooltiptext"><?=$t->tr("distance")?></span></span></th>
+            <th data-colname="rpLoxDist"><span class="tooltip">d<sub>lox</sub><span class="tooltiptext"><?=$t->tr("distanceLox")?></span></span></th>
+            <th data-colname="rpName"><?=$t->tr("name")?></th>
+            <th data-colname="rpType"></th>
+        </tr>
+    </thead>
+    <tbody id="routePoints">
+    </tbody>
+</table>
+
+<!--
   - Reading a GPX file back in
   -->
 <div class="modal" id="openfiledialog">
@@ -78,34 +108,13 @@
             </li>
         </ul>
         <h2><?=$t->tr("segmentDisplay")?></h2>
+        <select id="tripPlannerDisplay">
+            <option value="loxo">Loxodromic courses and distances
+            <option value="ortho">Orthodromic courses and distances
+            <option value="expert">Expert mode (manually configure columns)
+        </select>
         <ul id="prefViewColumns">
         </ul>
     </div>
 </div>
 
-<table id="tripSummary">
-    <thead>
-        <tr><th><?=$t->tr("start")?></th><th><?=$t->tr("finish")?></th><th><?=$t->tr("distance")?></th></tr>
-    </thead>
-    <tbody>
-        <tr><td id="routeStart">--</td><td id="routeEnd">--</td><td id="routeDistance">--</td></tr>
-    </tbody>
-</table>
-
-<table id="segmentList">
-    <thead>
-        <tr>
-            <th class="rpIdx">#</th>
-            <th class="rpRwk"><span class="tooltip"><?=$t->tr("rwK")?><span class="tooltiptext"><?=$t->tr("trueCourse")?></span></span></th>
-            <th class="rpMwk"><span class="tooltip"><?=$t->tr("mwK")?><span class="tooltiptext"><?=$t->tr("magCourse")?></span></span></th>
-            <th class="rpLoxRwk"><span class="tooltip"><?=$t->tr("rwK")?><span class="tooltiptext"><?=$t->tr("trueCourseLox")?></span></span></th>
-            <th class="rpLoxMwk"><span class="tooltip"><?=$t->tr("mwK")?><span class="tooltiptext"><?=$t->tr("magCourseLox")?></span></span></th>
-            <th class="rpDist"><span class="tooltip">d<sub>orth</sub><span class="tooltiptext"><?=$t->tr("distance")?></span></span></th>
-            <th class="rpLoxDist"><span class="tooltip">d<sub>lox</sub><span class="tooltiptext"><?=$t->tr("distanceLox")?></span></span></th>
-            <th class="rpName"><?=$t->tr("name")?></th>
-            <th class="rpType"></th>
-        </tr>
-    </thead>
-    <tbody id="routePoints">
-    </tbody>
-</table>

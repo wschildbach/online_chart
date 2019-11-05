@@ -50,8 +50,8 @@ function NauticalRoute_initControls() {
     editPanel.addControls([routeDraw, routeEdit]);
     editPanel.defaultControl = routeDraw;
     map.addControl(editPanel);
-    NauticalRoute_initSegmentDisplay();
     routeEdit.standalone = true;
+    NauticalRoute_initPrefs();
 }
 
 function NauticalRoute_startEditMode() {
@@ -85,30 +85,74 @@ function NauticalRoute_editMode() {
  * set up the default visibility of columns in the segment display table.
  * Also dynamically generate the preferences view based on the table.
  */
-function NauticalRoute_initSegmentDisplay() {
+const columnPrefs = {'loxo':['rpIdx','rpLoxRwk','rpLoxMwk','rpLoxDist','rpName'], 'ortho':['rpIdx','rpRwk','rpMwk','rpDist','rpName']};
+
+function NauticalRoute_initPrefs() {
+    function chkBoxChanged(input) {
+        if (input == undefined) {
+            input = $('#prefViewColumns input');
+        }
+        $(input).each(function() {
+            let checked = $(this).is(':checked');
+            // get the colname of the input element
+            let t = $(this).attr('data-colname');
+            let x = $('#segmentList th[data-colname="'+ t +'"]');
+            $('#segmentList th[data-colname="'+ t +'"]').css('display',checked ? 'table-cell':'none');
+        });
+    }
+
+    /* hide the expert display by default */
+    $('#prefViewColumns').toggle(false);
+
+    /* when the drop-down menu is changed, adjust checkboxes accordingly */
+    $('#tripPlannerDisplay').change(function() {
+        let dropVal = $(this).val();
+        // show the checkbox section only when expert mode
+        $('#prefViewColumns').toggle(dropVal == 'expert');
+
+        if (dropVal != 'expert') {
+            // un-check all columns first, then check all columns that are indicated by the drop-down
+            $('#prefViewColumns input').prop('checked',false);
+            columnPrefs[dropVal].map((id) => $('#prefViewColumns input[data-colname="'+id+'"]').prop('checked',true));
+            chkBoxChanged();
+            NauticalRoute_getPoints();
+        }
+    });
+
     let prefMenu = $('#prefViewColumns');
     $(prefMenu).empty();
     let colHeaders = $('#segmentList th');
     colHeaders.each(function() {
-        let id = $(this).attr('class');
+        let id = $(this).attr('data-colname');
         if (id != undefined) {
-            let li = '<li><input type="checkbox" checked id="' + 'chk' + id + '" >' + $(this).text() + '</li>';
-            /* append a li with checkbox; on click, set the display property of associated columns */
-            $(li).appendTo(prefMenu).click(function (evt) {
-                let checked = $(evt.currentTarget).find('input').is(':checked');
-                /* get the id of the input element; strip off the "chk" from the id */
-                let t = '.'+$(evt.currentTarget).find('input').attr('id').substring(3);
-                $(t).css('display',checked ? 'table-cell':'none');
+            /* append a li with checkbox */
+            let li = '<li><input type="checkbox" data-colname="' + id + '" >' + $(this).text() + '</li>';
+            li = $(li).appendTo(prefMenu);
+            /* on click, set the display property of associated columns */
+            $(li).click(function (evt) {
+                chkBoxChanged($(evt.currentTarget).find('input'));
+                NauticalRoute_getPoints();
             });
         }
     });
+    // un-check all columns first, then check all columns that are indicated by the drop-down
+    $('input',prefMenu).prop('checked',false);
+    columnPrefs['ortho'].map(id => $('input[data-colname="'+id+'"]',prefMenu).prop('checked',true));
+    chkBoxChanged();
 }
 
 function toggleOpenFileDialog() {
     let o=$('#openfiledialog');
     o.toggleClass('show-modal');
 }
-function togglePrefDialog() {$('#preferences').toggleClass('show-modal');}
+function togglePrefDialog() {
+    $('#preferences').toggleClass('show-modal');
+    if ($('#preferences.show-modal')) {
+//        NauticalRoute_setupPreferences();
+    } else {
+        NauticalRoute_getPoints();
+    }
+}
 function toggleSaveFileDialog() {$('#savefiledialog').toggleClass('show-modal');}
 
 function NauticalRoute_saveTrack() {
@@ -364,13 +408,13 @@ function NauticalRoute_getPoints() {
             let v = getVariation(latA, lonA, {onLoadModel:NauticalRoute_getPoints});
 
             tr.append(
-                $('<td class="rpIdx orthodromic loxodromic"></td>').html(parseInt(i+1)),
-                $('<td class="rpRwk orthodromic"></td>').html(tC.toFixed(1) + '°'),
-                $('<td class="rpMwk orthodromic"></td>').html(v ? (tC+v).toFixed(1)+'°' : '--'),
-                $('<td class="rpLoxRwk loxodromic"></td>').html(loxoCourse(latA, lonA, latB, lonB).toFixed(1) + '°'),
-                $('<td class="rpLoxMwk loxodromic"></td>').html(v ? (loxoCourse(latA, lonA, latB, lonB)+v).toFixed(1)+'°' : '--'),
-                $('<td class="rpDist orthodromic"></td>').html(distance.toFixed(1) + ' ' + $('#distUnits').val()),
-                $('<td class="rpLoxDist loxodromic"></td>').html(loxoDistance(latA, lonA, latB, lonB).toFixed(1) + ' ' + $('#distUnits').val()),
+                $('<td data-colname="rpIdx" class="orthodromic loxodromic"></td>').html(parseInt(i+1)),
+                $('<td data-colname="rpRwk" class="orthodromic"></td>').html(tC.toFixed(1) + '°'),
+                $('<td data-colname="rpMwk" class="orthodromic"></td>').html(v ? (tC+v).toFixed(1)+'°' : '--'),
+                $('<td data-colname="rpLoxRwk" class="loxodromic"></td>').html(loxoCourse(latA, lonA, latB, lonB).toFixed(1) + '°'),
+                $('<td data-colname="rpLoxMwk" class="loxodromic"></td>').html(v ? (loxoCourse(latA, lonA, latB, lonB)+v).toFixed(1)+'°' : '--'),
+                $('<td data-colname="rpDist" class="orthodromic"></td>').html(distance.toFixed(1) + ' ' + $('#distUnits').val()),
+                $('<td data-colname="rpLoxDist" class="loxodromic"></td>').html(loxoDistance(latA, lonA, latB, lonB).toFixed(1) + ' ' + $('#distUnits').val()),
                 tdName,
                 $('<input type="checkbox" '+(points[i].ortho?'checked':'')+'>').appendTo($('<td class="orthodromic loxodromic"></td>')).click(NauticalRoute_typeChange)
             );
@@ -379,6 +423,24 @@ function NauticalRoute_getPoints() {
         $('#routeEnd').html(coordFormat(y2lat(points[points.length-1].y),x2lon(points[points.length-1].x)));
         $('#routeDistance').html(totalDistance.toFixed(2) + ' ' + $('#distUnits').val());
     }
+
+    // clear the visibility for everything
+    // for all th in the table
+    $('#segmentList th').each(function() {
+        let n = $(this).attr('data-colname');
+        let v = $(this).css('display');
+        $('#routePoints td[data-colname="'+ n +'"]').css('display', v);
+    });
+
+    // for all td in the table
+    /*
+    $('#routePoints td').css('display',function() {
+        // search the checkbox with a matching id
+        let t='#chk'+this.attr('id');
+        // and if it is checked, display the td, otherwise hide it.
+        return $('#chk'+this.attr('id')).is(':checked') ? 'table-cell':'none';
+    })
+    */
 }
 
 function NauticalRoute_getRouteCsv(points) {

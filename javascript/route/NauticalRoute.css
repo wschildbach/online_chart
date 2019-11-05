@@ -5,7 +5,9 @@ input[type="text"] {
 }
 
 div#actionDialogMenu {
+    position: relative;
     display:block;
+    z-index: 100;
 }
 
 #actionDialogMenu > ul {
@@ -48,6 +50,8 @@ div#actionDialogMenu {
 
 #segmentList {
     margin: 5px;
+    position: relative;
+    z-index: 0;
 }
 
 #segmentList thead {
@@ -75,14 +79,14 @@ div#actionDialogMenu {
 }
 
 
-#segmentList td.rpIdx,th.rpIdx { width: 1em; } /* segment # */
-#segmentList td.rpRwk,th.rpRwk { width: 3em; } /* true course */
-#segmentList td.rpLoxRwk,th.rpLoxRwk { width: 3em; } /* true course loxodromic */
-#segmentList td.rpMwk,th.rpMwk { width: 3em; } /* magnetic course */
-#segmentList td.rpDist,th.rpDist { width: 5em; } /* distance */
-#segmentList td.rpLoxDist,th.rpLoxDist { width: 5em; } /* loxodromic distance */
-#segmentList td.rpName,th.rpName { width: 11em; } /* coordinates */
-#segmentList td.rpType,th.rpType { width: 1em; } /* type */
+#segmentList *[data-colname="rpIdx"] { width: 1em; } /* segment # */
+#segmentList *[data-colname="rpRwk"] { width: 3em; } /* true course */
+#segmentList *[data-colname="rpLoxRwk"] { width: 3em; } /* true course loxodromic */
+#segmentList *[data-colname="rpMwk"] { width: 3em; } /* magnetic course */
+#segmentList *[data-colname="rpDist"] { width: 5em; } /* distance */
+#segmentList *[data-colname="rpLoxDist"] { width: 5em; } /* loxodromic distance */
+#segmentList *[data-colname="rpName"] { width: 11em; } /* coordinates */
+#segmentList *[data-colname="rpType"] { width: 1em; } /* type */
 
 
 /* even/odd coloring */
