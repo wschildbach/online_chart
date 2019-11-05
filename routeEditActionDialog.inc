@@ -8,7 +8,7 @@
                 <li class="separator"></li>
                 <li onclick="togglePrefDialog();"><?= $t->tr("preferences")?>...</li>
                 <li class="separator"></li>
-                <li><a onClick="if (!routeChanged || confirm('<?=$t->tr("confirmCloseRoute")?>')) {closeNauticalRoute();}">Close</a></li>
+                <li><a onclick="if (!routeChanged || confirm('<?=$t->tr("confirmCloseRoute")?>')) {closeNauticalRoute();}">Close</a></li>
             </ul>
         </li>
         <li><span><?=$t->tr("edit")?></span>
