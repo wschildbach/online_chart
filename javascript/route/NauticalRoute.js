@@ -141,18 +141,8 @@ function NauticalRoute_initPrefs() {
     chkBoxChanged();
 }
 
-function toggleOpenFileDialog() {
-    let o=$('#openfiledialog');
-    o.toggleClass('show-modal');
-}
-function togglePrefDialog() {
-    $('#preferences').toggleClass('show-modal');
-    if ($('#preferences.show-modal')) {
-//        NauticalRoute_setupPreferences();
-    } else {
-        NauticalRoute_getPoints();
-    }
-}
+function toggleOpenFileDialog() {$('#openfiledialog').toggleClass('show-modal');}
+function togglePrefDialog() {$('#preferences').toggleClass('show-modal');}
 function toggleSaveFileDialog() {$('#savefiledialog').toggleClass('show-modal');}
 
 function NauticalRoute_saveTrack() {
@@ -424,23 +414,12 @@ function NauticalRoute_getPoints() {
         $('#routeDistance').html(totalDistance.toFixed(2) + ' ' + $('#distUnits').val());
     }
 
-    // clear the visibility for everything
-    // for all th in the table
+    // for all th in the table, copy the visibility into the corresponding td
     $('#segmentList th').each(function() {
         let n = $(this).attr('data-colname');
         let v = $(this).css('display');
         $('#routePoints td[data-colname="'+ n +'"]').css('display', v);
     });
-
-    // for all td in the table
-    /*
-    $('#routePoints td').css('display',function() {
-        // search the checkbox with a matching id
-        let t='#chk'+this.attr('id');
-        // and if it is checked, display the td, otherwise hide it.
-        return $('#chk'+this.attr('id')).is(':checked') ? 'table-cell':'none';
-    })
-    */
 }
 
 function NauticalRoute_getRouteCsv(points) {
