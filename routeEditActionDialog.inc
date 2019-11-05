@@ -1,4 +1,6 @@
-
+<!--
+  - The menu
+  -->
 <div id="actionDialogMenu" class="menu">
     <ul>
         <li><span><?=$t->tr("file")?></span>
@@ -21,6 +23,9 @@
     </ul>
 </div>
 
+<!--
+  - Reading a GPX file back in
+  -->
 <div class="modal" id="openfiledialog">
     <div class="modal-content">
         <span class="close-button" onclick="toggleOpenFileDialog();">×</span>
@@ -33,6 +38,9 @@
     </div>
 </div>
 
+<!--
+  - Saving a GPX file
+  -->
 <div class="modal" id="savefiledialog">
     <div class="modal-content">
         <span class="close-button" onclick="toggleSaveFileDialog();">×</span>
@@ -48,6 +56,9 @@
     </div>
 </div>
 
+<!--
+  - The menu to configure the table display, units etc.
+  -->
 <div class="modal" id="preferences">
     <div class="modal-content">
         <span class="close-button" onclick="togglePrefDialog();">×</span>
