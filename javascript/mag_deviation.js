@@ -36,7 +36,7 @@ function refreshMagdev() {
     let m = getVariationChange(latitude, longitude, options);
 
     if (m != undefined) {
-        document.getElementById('magCompassRose').style.transform = 'rotate('+(-m.variation).toFixed(1)+'deg)';
+        document.getElementById('magCompassRose').style.transform = 'rotate('+m.variation.toFixed(1)+'deg)';
         // EXAMPLE
         // VAR 3.5°5'E (2015)
         // ANNUAL DECREASE 8'
