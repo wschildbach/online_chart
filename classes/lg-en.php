@@ -14,7 +14,8 @@ $english = array(
     "descrSkipperGuide"      => "Port pilot",
     "descrOpenPortGuide"     => "Meteogramm",
 
-    // Buttons-------------------------------------------------------
+    // Buttons and menus---------------------------------------------
+    "open"                   => "Open",
     "save"                   => "Save",
     "ok"                     => "OK",
     "cancel"                 => "Cancel",
@@ -23,16 +24,19 @@ $english = array(
     "download"               => "Download",
     "reload"                 => "Reload",
     "edit"                   => "Edit",
+    "info"                   => "Information",
     "move"                   => "Move",
     "delete"                 => "Delete",
     "login"                  => "Login",
     "logout"                 => "Logout",
     "createAccount"          => "Create New Account",
     "language"               => "Language",
+    "preferences"            => "Preferences",
 
     // Map-----------------------------------------------------------
     "coordinate"             => "Coordinate",
     "coordinateGrid"         => "Coordinate Grid",
+    "coordinateFormat"       => "Coordinate Format",
     "copynpaste"             => "URL (Copy with Ctrl/Cmd + C)",
     "course"                 => "Course",
     "development"            => "Development",
@@ -208,6 +212,19 @@ $english = array(
     // Trip planner
     "confirmDeleteRoute"     => "Do you want to delete this route?",
     "confirmCloseRoute"      => "Do you want to close this route without saving?",
+    "units"                  => "Units",
+    "name"                   => "Name",
+    "file"                   => "File",
+    "deleteRoute"            => "Delete Route",
+    "segmentDisplay"         => "Segment Display",
+    "trueCourse"             => "True Course (orthodromic)",
+    "trueCourseLox"          => "True Course (loxodromic)",
+    "magCourse"              => "Magnetic Course (orthodromic)",
+    "magCourseLox"           => "Magnetic Course (loxodromic)",
+    "rwK"                    => "TC",
+    "mwK"                    => "MC",
+    "distanceLox"            => "Distance (loxodromic)",
+    "distanceOrth"           => "Distance (orthodromic)",
 
     // other
     "noJavascript"           => "You are either using a browser that does not support JavaScript, or you have disabled JavaScript. OpenSeaMap uses JavaScript for its maps.",

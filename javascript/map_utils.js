@@ -154,7 +154,7 @@ function formatCoords(coord, format) {
         case '_':
             di = 0;
             df = 0;
-            fill = (c == '_'?' ':'0');
+            fill = (c == '_'?'&nbsp;':'0');
             do {
                 di++; i++;
             } while (format.charAt(i) === c);
@@ -163,7 +163,7 @@ function formatCoords(coord, format) {
             } else {
                 continue;
             }
-            while (format.charAt(i) === c) {
+            while (format.charAt(i) == '#' || format.charAt[i] == '_') {
                 df++; i++;
             }
             break;

@@ -23,49 +23,74 @@
 // the geomagnetic model. This gets set up at application start
 let geoMag ;
 
-function setMagdev(p) {
-    // pick the right bottom corner of the map to avoid problems with interpolating
-    // across the date boundary
-    let latitude = (p.b+p.t)/2;
-    let longitude = (p.l+p.r)/2;
-
-    // get two dates exactly one year apart
-    const msInYear = 1000*60*60*24*365.25;
-    let now  = new Date();
-    let then = new Date(); then.setTime(now.getTime() + msInYear);
-
-    let myGeoMagNow = geoMag(latitude, longitude, 0, now);
-    let myGeoMagThen = geoMag(latitude, longitude, 0, then);
-    let nextyear = (then.getTime()-now.getTime())/msInYear;
-    let deviation = myGeoMagNow.dec;
-    let change = (myGeoMagThen.dec-myGeoMagNow.dec) / nextyear;
-
-    document.getElementById('magCompassRose').style.transform = 'rotate('+(-deviation).toFixed(1)+'deg)';
-    // EXAMPLE
-    // VAR 3.5°5'E (2015)
-    // ANNUAL DECREASE 8'
-    $('#magCompassTextTop').html("VAR "+deviation.toFixed(1)+(deviation>=0 ? "E":"W")+" ("+now.getFullYear()+")");
-    $('#magCompassTextBottom').html("ANNUAL "+(change >= 0 ? "INCREASE ":"DECREASE ")+(60*change).toFixed(0)+"'");
-}
-
 // Downloads new magnetic deviation(s) from the server. This is called when the map moves.
 function refreshMagdev() {
     let bounds = map.getExtent().toArray();
     let params = { "b": y2lat(bounds[1]), "t": y2lat(bounds[3]), "l": x2lon(bounds[0]), "r": x2lon(bounds[2])};
 
-    if (geoMag == undefined) {
-        function initModel(data) {
-            var wmm = cof2Obj(data);
-            geoMag = geoMagFactory(wmm);
-            setMagdev($(this)[0]);
-        }
+    let latitude  = (params.b+params.t)/2;
+    let longitude = (params.l+params.r)/2;
+    let options = {date:new Date(), onLoadModel:refreshMagdev};
 
+    /* get the variation and yearly change. If not available yet, call me again when it is */
+    let m = getVariationChange(latitude, longitude, options);
+
+    if (m != undefined) {
+        document.getElementById('magCompassRose').style.transform = 'rotate('+(-m.variation).toFixed(1)+'deg)';
+        // EXAMPLE
+        // VAR 3.5°5'E (2015)
+        // ANNUAL DECREASE 8'
+        $('#magCompassTextTop').html("VAR "+m.variation.toFixed(1)+"°"+(m.variation>=0 ? "E":"W")+" ("+options.date.getFullYear()+")");
+        $('#magCompassTooltip').text(m.variation.toFixed(1)+"°"+(m.variation>=0 ? "E":"W"));
+        $('#magCompassTextBottom').html("ANNUAL "+(m.change >= 0 ? "INCREASE ":"DECREASE ")+(60*m.change).toFixed(0)+"'");
+    }
+}
+
+/*
+ * get the magnetic variation at the center of the viewport.
+ *
+ * If the model is not loaded yet, load it and return "undefined".
+ * You can also provide a function to call once the model is loaded.
+ */
+function getVariation(lat, lon, options) {
+    if (geoMag == undefined) {
         /* if the geomagnetic model has not been loaded yet, load it and update the deviation asynchronously */
         jQuery.ajax({
             url:"javascript/geomagjs/WMM.COF",
-            context:params}).done(initModel);
-    } else {
-        /* else, synchronous update */
-        setMagdev(params);
+            context:options}).done(initModel);
+
+        function initModel(data) {
+            var wmm = cof2Obj(data);
+            geoMag = geoMagFactory(wmm);
+            if (this.onLoadModel) {this.onLoadModel();}
+        }
+        return undefined;
     }
+    return geoMag(lat, lon, options.elevation || 0, options.date || new Date()).dec
+}
+
+/*
+ * return an object with current variation and yearly change.
+ *
+ * If the model is not loaded yet, load it and return "undefined".
+ * You can also provide a function to call once the model is loaded.
+ */
+
+function getVariationChange(lat, lon, options) {
+    let opts = {onLoadModel:options.onLoadModel};
+
+    // get two dates exactly one year apart
+    const msInYear = 1000*60*60*24*365.25;
+    let now = options.now || new Date();
+    let then = new Date(); then.setTime(now.getTime() + msInYear);
+
+    opts.date = now;
+    let varNow = getVariation(lat,lon,opts);
+    if (varNow === undefined) {return undefined;}
+
+    opts.date = then;
+    let varThen = getVariation(lat,lon,opts);
+
+    let span = (then.getTime()-now.getTime())/msInYear; /* should be exactly one */
+    return {variation: varNow, change:(varThen-varNow) / span};
 }

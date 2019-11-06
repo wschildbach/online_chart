@@ -21,7 +21,9 @@
  ******************************************************************************/
 
 var defaultStyle = {strokeColor: "blue", strokeOpacity: "0.8", strokeWidth: 3, fillColor: "blue", pointRadius: 3, cursor: "pointer"};
+var gcStyleOpts      = {strokeColor: "black", strokeOpacity: "0.5", strokeWidth: 1, fillColor: "blue", pointRadius: 3, cursor: "pointer", lineDash: [1,10]};
 var style = OpenLayers.Util.applyDefaults(defaultStyle, OpenLayers.Feature.Vector.style["default"]);
+var gcStyle = OpenLayers.Util.applyDefaults(gcStyleOpts, OpenLayers.Feature.Vector.style["default"]);
 var routeStyle = new OpenLayers.StyleMap({
     'default': style,
     'select': {strokeColor: "red", fillColor: "red"}
@@ -31,8 +33,9 @@ var editPanel;
 var routeDraw;
 var routeEdit;
 
-var routeTrack;
-var routeObject;
+var routeObject; /* feature #0, which is the edited line */
+
+let orthoSegmentFeature;
 
 var style_edit = {
     strokeColor: "#CD3333",
@@ -48,10 +51,13 @@ function NauticalRoute_initControls() {
     editPanel.defaultControl = routeDraw;
     map.addControl(editPanel);
     routeEdit.standalone = true;
+    NauticalRoute_initPrefs();
 }
 
 function NauticalRoute_startEditMode() {
     NauticalRoute_initControls();
+    NauticalRoute_getPoints();
+    layer_nautical_route.events.register("featuresadded", layer_nautical_route, NauticalRoute_routeAdded);
     routeChanged = false;
 }
 
@@ -62,23 +68,79 @@ function NauticalRoute_stopEditMode() {
     routeDraw.deactivate();
     routeEdit.deactivate();
     layer_nautical_route.removeAllFeatures();
+    layer_nautical_route.events.unregister("featuresadded", layer_nautical_route, NauticalRoute_routeAdded);
+    layer_nautical_route.events.unregister("featuremodified", layer_nautical_route, NauticalRoute_routeModified);
+    routeObject = undefined;
 }
 
-function NauticalRoute_addMode() {
-    routeDraw.activate();
-    routeEdit.deactivate();
+/*
+ * set up the default visibility of columns in the segment display table.
+ * Also dynamically generate the preferences view based on the table.
+ */
+const columnPrefs = {'loxo':['rpIdx','rpLoxRwk','rpLoxMwk','rpLoxDist','rpName'], 'ortho':['rpIdx','rpRwk','rpMwk','rpDist','rpName']};
+
+function NauticalRoute_initPrefs() {
+    function chkBoxChanged(input) {
+        if (input == undefined) {
+            input = $('#prefViewColumns input');
+        }
+        $(input).each(function() {
+            let checked = $(this).is(':checked');
+            // get the colname of the input element
+            let t = $(this).attr('data-colname');
+            let x = $('#segmentList th[data-colname="'+ t +'"]');
+            $('#segmentList th[data-colname="'+ t +'"]').css('display',checked ? 'table-cell':'none');
+        });
+    }
+
+    /* hide the expert display by default */
+    $('#prefViewColumns').toggle(false);
+
+    /* when the drop-down menu is changed, adjust checkboxes accordingly */
+    $('#tripPlannerDisplay').change(function() {
+        let dropVal = $(this).val();
+        // show the checkbox section only when expert mode
+        $('#prefViewColumns').toggle(dropVal == 'expert');
+
+        if (dropVal != 'expert') {
+            // un-check all columns first, then check all columns that are indicated by the drop-down
+            $('#prefViewColumns input').prop('checked',false);
+            columnPrefs[dropVal].map((id) => $('#prefViewColumns input[data-colname="'+id+'"]').prop('checked',true));
+            chkBoxChanged();
+            NauticalRoute_getPoints();
+        }
+    });
+
+    let prefMenu = $('#prefViewColumns');
+    $(prefMenu).empty();
+    let colHeaders = $('#segmentList th');
+    colHeaders.each(function() {
+        let id = $(this).attr('data-colname');
+        if (id != undefined) {
+            /* append a li with checkbox */
+            let li = '<li><input type="checkbox" data-colname="' + id + '" >' + $(this).text() + '</li>';
+            li = $(li).appendTo(prefMenu);
+            /* on click, set the display property of associated columns */
+            $(li).click(function (evt) {
+                chkBoxChanged($(evt.currentTarget).find('input'));
+                NauticalRoute_getPoints();
+            });
+        }
+    });
+    // un-check all columns first, then check all columns that are indicated by the drop-down
+    $('input',prefMenu).prop('checked',false);
+    columnPrefs['ortho'].map(id => $('input[data-colname="'+id+'"]',prefMenu).prop('checked',true));
+    chkBoxChanged();
 }
 
-function NauticalRoute_editMode() {
-    routeDraw.deactivate();
-    routeEdit.activate();
-    //layer_nautical_route.style = style_green;
-}
+function toggleOpenFileDialog() {$('#openfiledialog').toggleClass('show-modal');}
+function togglePrefDialog() {$('#preferences').toggleClass('show-modal');}
+function toggleSaveFileDialog() {$('#savefiledialog').toggleClass('show-modal');}
 
-function NauticalRoute_DownloadTrack() {
-    var format = document.getElementById("routeFormat").value;
-    var name   = document.getElementById("tripName").value;
-    var mimetype, filename;
+function NauticalRoute_saveTrack() {
+    let format = $('#routeFormat').val();
+    let name   = $('#tripName').val();
+    let mimetype, filename;
 
     if (name=="") {
         name = "route";
@@ -88,12 +150,12 @@ function NauticalRoute_DownloadTrack() {
         case 'CSV':
             mimetype = 'text/csv';
             filename = name+'.csv';
-            content = NauticalRoute_getRouteCsv(routeTrack);
+            content = NauticalRoute_getRouteCsv(routeObject);
             break;
         case 'KML':
             mimetype = 'application/vnd.google-earth.kml+xml';
             filename = name+'.kml';
-            content = NauticalRoute_getRouteKml(routeTrack);
+            content = NauticalRoute_getRouteKml(routeObject);
             break;
         case 'GPX':
             mimetype = 'application/gpx+xml';
@@ -142,71 +204,208 @@ function NauticalRoute_DownloadTrack() {
     $('#actionDialog > form').get(0).submit();
 }
 
+function NauticalRoute_openTrack() {
+    let fileInput = document.querySelector("#openfilename");
+    let files = fileInput.files;
+    let gpxFile = files[0];
+
+    var reader = new FileReader();
+    reader.onload = function(event) {
+        var contents = event.target.result;
+        let parser = new DOMParser();
+        let xmlDoc = parser.parseFromString(contents, "text/xml");
+
+            // change from XPath to other selection syntax?
+    // see https://www.topografix.com/GPX/1/1/#type_rteType
+    // and https://en.wikipedia.org/wiki/GPS_Exchange_Format
+    // and https://developer.mozilla.org/en-US/docs/Web/API/Document
+    // specifically https://developer.mozilla.org/en-US/docs/Web/API/Document/evaluate
+    // and https://developer.mozilla.org/en-US/docs/Web/API/XPathResult
+
+        // get the name of the route
+        let name = xmlDoc.getElementsByTagName("name");
+        $('#tripName').val(name[0].innerHTML)
+
+        let points=[] ;
+        let rte = xmlDoc.getElementsByTagName("rtept");
+        if (rte.length == 0) // if no route contained, use track
+            rte = xmlDoc.getElementsByTagName("trkpt")
+
+        for (const pt of rte) {
+            const lat = $(pt).attr('lat')
+            const lon = $(pt).attr('lon')
+            points.push(new OpenLayers.Geometry.Point(lon2x(lon),lat2y(lat)))
+        }
+
+        // then convert into a feature for OpenLayers
+        let ls = new OpenLayers.Geometry.LineString(points)
+        let feat = new OpenLayers.Feature.Vector(ls,{},style)
+
+        layer_nautical_route.removeAllFeatures({silent:true});
+        layer_nautical_route.addFeatures(feat);
+    };
+
+    reader.onerror = function(event) {
+        console.error("File could not be read! Code " + event.target.error.code);
+    };
+
+    reader.readAsText(gpxFile);
+}
+
 function NauticalRoute_routeAdded(event) {
+    routeChanged = true;
     routeObject = event.object.features[0];
 
-    routeTrack = routeObject.geometry.getVertices();
     routeDraw.deactivate();
     routeEdit.activate();
-    NauticalRoute_getPoints(routeTrack);
+
+    layer_nautical_route.events.unregister("featuresadded", layer_nautical_route, NauticalRoute_routeAdded);
+    layer_nautical_route.events.register("featuremodified", layer_nautical_route, NauticalRoute_routeModified);
+
+    if (orthoSegmentFeature) layer_nautical_route.removeFeatures([orthoSegmentFeature]);
+    orthoSegmentFeature = new OpenLayers.Feature.Vector(getOrthoSegments(), {}, gcStyle);
+    layer_nautical_route.addFeatures(orthoSegmentFeature, {ortho:true});
+
     // Select element for editing
     routeEdit.selectFeature(routeObject);
-    document.getElementById('buttonRouteDownloadTrack').disabled=false;
+
+    NauticalRoute_getPoints();
 }
 
 function NauticalRoute_routeModified(event) {
-    var routeObject = event.object.features[0];
+    routeChanged = true;
+    routeObject = event.object.features[0];
 
-    routeTrack = routeObject.geometry.getVertices();
-    NauticalRoute_getPoints(routeTrack);
+    if (orthoSegmentFeature) layer_nautical_route.removeFeatures([orthoSegmentFeature]);
+    orthoSegmentFeature = new OpenLayers.Feature.Vector(getOrthoSegments(), {},gcStyle);
+    layer_nautical_route.addFeatures(orthoSegmentFeature, {ortho:true});
+
+    NauticalRoute_getPoints();
 }
 
 let routeChanged = false;
 
-function NauticalRoute_getPoints(points) {
+function getIdx(e) {
+    return  $(e).attr('data-idx') ||
+            $(e).parentsUntil('#pointsRoute','[data-idx]').attr('data-idx');
+}
 
-    routeChanged = true;
+function NauticalRoute_zoomTo(evt) {
+    /* this/context is tr, target is td */
+    let idx = getIdx(evt.target);
 
-    var htmlText;
-    var latA, latB, lonA, lonB, distance, bearing;
-    var totalDistance = 0;
-    var distUnits = document.getElementById("distUnits").value;
-    var coordFormat = function(lat,lon) {return formatCoords(lat,'N __.___°') + " - " + formatCoords(lon,'W___.___°');}
+    let points = routeObject.geometry.getVertices();
+    let pt = points[idx];
 
-    if (document.getElementById("coordFormat").value == "coordFormatdms") {
-        coordFormat = function(lat,lon) {return formatCoords(lat,'N __°##\'##"') + " - " + formatCoords(lon,'W___°##\'##"');}
+    /* could now also determine zoom by building the difference between points, then using
+       http://dev.openlayers.org/apidocs/files/OpenLayers/Layer-js.html#OpenLayers.Layer.getZoomForExtent
+     */
+
+    jumpTo(x2lon(pt.x), y2lat(pt.y), zoom);
+}
+
+function NauticalRoute_nameChange(evt) {
+    /* this/context is td, target is input */
+    let name = $(evt.target).val();
+    let idx = getIdx(evt.target);
+
+    let points = routeObject.geometry.getVertices();
+    let pt = points[idx];
+
+    if (name == "") {
+        delete pt.name;
+    } else {
+        pt.name = name;
     }
+}
 
-    htmlText = '<table id="routeSegmentList">';
-    htmlText +=
-        '<tr><th/>' +
-        '<th>' + tableTextNauticalRouteCourse + '</th>' +
-        '<th>' + tableTextNauticalRouteDistance + '</th>' +
-        '<th>' + tableTextNauticalRouteCoordinate + '</th></tr>'
-    for(i = 0; i < points.length - 1; i++) {
-        latA = y2lat(points[i].y);
-        lonA = x2lon(points[i].x);
-        latB = y2lat(points[i + 1].y);
-        lonB = x2lon(points[i + 1].x);
-        distance = getDistance(latA, latB, lonA, lonB);
-        if (distUnits == "km") {
-            distance = nm2km(distance);
+function getOrthoSegments() {
+    let mls = [];
+    let points = routeObject && routeObject.geometry.getVertices();
+    if (points) {
+        for(let i = 0; i < points.length - 1; i++) {
+                let latA = y2lat(points[i].y);
+                let lonA = x2lon(points[i].x);
+                let latB = y2lat(points[i + 1].y);
+                let lonB = x2lon(points[i + 1].x);
+
+                let alpha = orthoInitialCourse(latA, lonA, latB, lonB);
+                let latP = orthoPeakLatitude(latA, alpha);
+                let lonP = orthoPeakLongitude(latA, lonA, alpha);
+
+                let p=[];
+                for (j = 0; j <= 10; j++) {
+                    let t = j / 10.0;
+                    let lon = lonB*t + lonA*(1-t);
+                    let lat = orthoLat(lon,latP,lonP);
+                    p.push(new OpenLayers.Geometry.Point(lon2x(lon),lat2y(lat)));
+                }
+                let ls = new OpenLayers.Geometry.LineString(p);
+                mls.push(ls);
         }
-        bearing = getBearing(latA, latB, lonA, lonB);
-        totalDistance += distance;
-        htmlText +=
-            '<tr>' +
-            '<td>' + parseInt(i+1) + '.</td>' +
-            '<td>' + bearing.toFixed(2) + '°</td>' +
-            '<td>' + distance.toFixed(2) + ' ' + distUnits + '</td>' +
-            '<td>' + coordFormat(latB,lonB) + '</td></tr>'
     }
-    htmlText += '</table>'
+    return new OpenLayers.Geometry.MultiLineString(mls);
+}
 
-    document.getElementById("routeStart").innerHTML = coordFormat(y2lat(points[0].y),x2lon(points[0].x));
-    document.getElementById("routeEnd").innerHTML   = coordFormat(y2lat(points[points.length-1].y),x2lon(points[points.length-1].x));
-    document.getElementById("routeDistance").innerHTML = totalDistance.toFixed(2) + ' ' + distUnits;
-    document.getElementById("routePoints").innerHTML = htmlText;
+function NauticalRoute_getPoints() {
+    $('#routeStart').html('--');
+    $('#routeEnd').html('--');
+    $('#routeDistance').html('--');
+
+    let rp = $('#routePoints');
+    rp.html('');
+
+    let points = routeObject && routeObject.geometry.getVertices();
+    if (points != undefined) {
+        const distFactors = {km: 1/ 0.540, m : 1000 / 0.540, nm : 1, ft : 1000 / (0.540*0.3048)};
+        let distFactor = distFactors[$('#distUnits').val()];
+
+        let latFormat = $('#coordFormat').val();
+        let lonFormat = $('#coordFormat').val().replace(/[NS]/,'W');
+        let coordFormat = function(lat,lon) {return formatCoords(lat, latFormat) + " - " + formatCoords(lon, lonFormat);}
+
+        let totalDistance = 0;
+        for(let i = 0; i < points.length - 1; i++) {
+            let latA = y2lat(points[i].y);
+            let lonA = x2lon(points[i].x);
+            let latB = y2lat(points[i + 1].y);
+            let lonB = x2lon(points[i + 1].x);
+            let tC = getBearing(latA, latB, lonA, lonB);
+            let distance = getDistance(latA, latB, lonA, lonB) * distFactor;
+            totalDistance += distance;
+            let tr = $('<tr data-idx="' + parseInt(i) + '"></tr>').appendTo(rp).click(NauticalRoute_zoomTo);;
+
+            let tdName = $('<td class="rpName orthodromic loxodromic"></td>');
+            tdName.append(
+                (points[i].name == undefined) ?
+                $('<input type="text" id="tripname" placeholder="' + coordFormat(latB,lonB) + '">') :
+                $('<input type="text" id="tripname" value="' + points[i].name + '">')
+            ).change(NauticalRoute_nameChange);
+
+            let v = getVariation(latA, lonA, {onLoadModel:NauticalRoute_getPoints});
+
+            tr.append(
+                $('<td data-colname="rpIdx" class="orthodromic loxodromic"></td>').html(parseInt(i+1)),
+                $('<td data-colname="rpRwk" class="orthodromic"></td>').html(tC.toFixed(1) + '°'),
+                $('<td data-colname="rpMwk" class="orthodromic"></td>').html(v ? (tC+v).toFixed(1)+'°' : '--'),
+                $('<td data-colname="rpLoxRwk" class="loxodromic"></td>').html(loxoCourse(latA, lonA, latB, lonB).toFixed(1) + '°'),
+                $('<td data-colname="rpLoxMwk" class="loxodromic"></td>').html(v ? (loxoCourse(latA, lonA, latB, lonB)+v).toFixed(1)+'°' : '--'),
+                $('<td data-colname="rpDist" class="orthodromic"></td>').html(distance.toFixed(1) + ' ' + $('#distUnits').val()),
+                $('<td data-colname="rpLoxDist" class="loxodromic"></td>').html(loxoDistance(latA, lonA, latB, lonB).toFixed(1) + ' ' + $('#distUnits').val()),
+                tdName
+            );
+        }
+        $('#routeStart').html(coordFormat(y2lat(points[0].y),x2lon(points[0].x)));
+        $('#routeEnd').html(coordFormat(y2lat(points[points.length-1].y),x2lon(points[points.length-1].x)));
+        $('#routeDistance').html(totalDistance.toFixed(2) + ' ' + $('#distUnits').val());
+    }
+
+    // for all th in the table, copy the visibility into the corresponding td
+    $('#segmentList th').each(function() {
+        let n = $(this).attr('data-colname');
+        let v = $(this).css('display');
+        $('#routePoints td[data-colname="'+ n +'"]').css('display', v);
+    });
 }
 
 function NauticalRoute_getRouteCsv(points) {
@@ -261,4 +460,3 @@ function NauticalRoute_getRouteGml(feature) {
 
     return parser.write(feature);
 }
-
