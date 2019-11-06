@@ -57,6 +57,7 @@ function NauticalRoute_initControls() {
 function NauticalRoute_startEditMode() {
     NauticalRoute_initControls();
     NauticalRoute_getPoints();
+    layer_nautical_route.events.register("featuresadded", layer_nautical_route, NauticalRoute_routeAdded);
     routeChanged = false;
 }
 
@@ -67,6 +68,8 @@ function NauticalRoute_stopEditMode() {
     routeDraw.deactivate();
     routeEdit.deactivate();
     layer_nautical_route.removeAllFeatures();
+    layer_nautical_route.events.unregister("featuresadded", layer_nautical_route, NauticalRoute_routeAdded);
+    layer_nautical_route.events.unregister("featuremodified", layer_nautical_route, NauticalRoute_routeModified);
     routeObject = undefined;
 }
 
@@ -255,6 +258,14 @@ function NauticalRoute_routeAdded(event) {
 
     routeDraw.deactivate();
     routeEdit.activate();
+
+    layer_nautical_route.events.unregister("featuresadded", layer_nautical_route, NauticalRoute_routeAdded);
+    layer_nautical_route.events.register("featuremodified", layer_nautical_route, NauticalRoute_routeModified);
+
+    if (orthoSegmentFeature) layer_nautical_route.removeFeatures([orthoSegmentFeature]);
+    orthoSegmentFeature = new OpenLayers.Feature.Vector(getOrthoSegments(), {}, gcStyle);
+    layer_nautical_route.addFeatures(orthoSegmentFeature, {ortho:true});
+
     // Select element for editing
     routeEdit.selectFeature(routeObject);
 
@@ -264,6 +275,10 @@ function NauticalRoute_routeAdded(event) {
 function NauticalRoute_routeModified(event) {
     routeChanged = true;
     routeObject = event.object.features[0];
+
+    if (orthoSegmentFeature) layer_nautical_route.removeFeatures([orthoSegmentFeature]);
+    orthoSegmentFeature = new OpenLayers.Feature.Vector(getOrthoSegments(), {},gcStyle);
+    layer_nautical_route.addFeatures(orthoSegmentFeature, {ortho:true});
 
     NauticalRoute_getPoints();
 }
@@ -309,7 +324,6 @@ function getOrthoSegments() {
     let points = routeObject && routeObject.geometry.getVertices();
     if (points) {
         for(let i = 0; i < points.length - 1; i++) {
-            if (points[i].ortho) {
                 let latA = y2lat(points[i].y);
                 let lonA = x2lon(points[i].x);
                 let latB = y2lat(points[i + 1].y);
@@ -328,25 +342,9 @@ function getOrthoSegments() {
                 }
                 let ls = new OpenLayers.Geometry.LineString(p);
                 mls.push(ls);
-            }
         }
     }
     return new OpenLayers.Geometry.MultiLineString(mls);
-}
-
-function NauticalRoute_typeChange(evt) {
-    /* this/context is td, target is input */
-    let idx = getIdx(evt.target);
-
-    let points = routeObject.geometry.getVertices();
-    let pt = points[idx];
-
-    pt.ortho = $(evt.target).is(':checked');
-
-    let mls = getOrthoSegments();
-    if (orthoSegmentFeature) layer_nautical_route.removeFeatures([orthoSegmentFeature]);
-    orthoSegmentFeature = new OpenLayers.Feature.Vector(mls,{},gcStyle);
-    layer_nautical_route.addFeatures(orthoSegmentFeature, {ortho:true});
 }
 
 function NauticalRoute_getPoints() {
@@ -394,8 +392,7 @@ function NauticalRoute_getPoints() {
                 $('<td data-colname="rpLoxMwk" class="loxodromic"></td>').html(v ? (loxoCourse(latA, lonA, latB, lonB)+v).toFixed(1)+'°' : '--'),
                 $('<td data-colname="rpDist" class="orthodromic"></td>').html(distance.toFixed(1) + ' ' + $('#distUnits').val()),
                 $('<td data-colname="rpLoxDist" class="loxodromic"></td>').html(loxoDistance(latA, lonA, latB, lonB).toFixed(1) + ' ' + $('#distUnits').val()),
-                tdName,
-                $('<input type="checkbox" '+(points[i].ortho?'checked':'')+'>').appendTo($('<td class="orthodromic loxodromic"></td>')).click(NauticalRoute_typeChange)
+                tdName
             );
         }
         $('#routeStart').html(coordFormat(y2lat(points[0].y),x2lon(points[0].x)));

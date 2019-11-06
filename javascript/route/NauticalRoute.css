@@ -86,7 +86,6 @@ div#actionDialogMenu {
 #segmentList *[data-colname="rpDist"] { width: 5em; } /* distance */
 #segmentList *[data-colname="rpLoxDist"] { width: 5em; } /* loxodromic distance */
 #segmentList *[data-colname="rpName"] { width: 11em; } /* coordinates */
-#segmentList *[data-colname="rpType"] { width: 1em; } /* type */
 
 
 /* even/odd coloring */

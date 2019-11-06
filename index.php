@@ -842,7 +842,7 @@
                 });
                 // Trip planner
                 layer_nautical_route = new OpenLayers.Layer.Vector("Trip Planner",
-                    { layerId: 9, styleMap: routeStyle, visibility: false, eventListeners: {"featuresadded": NauticalRoute_routeAdded, "featuremodified": NauticalRoute_routeModified}});
+                    { layerId: 9, styleMap: routeStyle, visibility: false});
                 // Grid WGS
                 layer_grid = new OpenLayers.Layer.GridWGS("coordinateGrid", {
                     layerId: 10,
