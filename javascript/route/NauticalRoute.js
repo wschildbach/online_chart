@@ -70,17 +70,6 @@ function NauticalRoute_stopEditMode() {
     routeObject = undefined;
 }
 
-function NauticalRoute_addMode() {
-    routeDraw.activate();
-    routeEdit.deactivate();
-}
-
-function NauticalRoute_editMode() {
-    routeDraw.deactivate();
-    routeEdit.activate();
-    //layer_nautical_route.style = style_green;
-}
-
 /*
  * set up the default visibility of columns in the segment display table.
  * Also dynamically generate the preferences view based on the table.
